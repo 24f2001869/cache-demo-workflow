@@ -1,0 +1,42 @@
+name: Fixed Cache Workflow
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  cache-demo:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Prime cache with exact key
+      id: cache-primer
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cache
+          node_modules
+        key: cache-8cbe73b
+        restore-keys: |
+          cache-8cbe73b
+          
+    - name: prime-cache-8cbe73b
+      run: |
+        echo "Cache key used: cache-8cbe73b"
+        if [ "${{ steps.cache-primer.outputs.cache-hit }}" == 'true' ]; then
+          echo "Cache hit! ✅ Dependencies restored from cache-8cbe73b"
+        else
+          echo "Cache miss! ⚠️ Priming cache with key: cache-8cbe73b"
+          # Create some cacheable content
+          mkdir -p ~/.cache
+          echo "cached data for key cache-8cbe73b" > ~/.cache/demo-file
+        fi
+        
+    - name: Simulate build process
+      run: |
+        echo "Building with cached dependencies..."
+        echo "Build completed successfully!"
