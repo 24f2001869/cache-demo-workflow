@@ -1,0 +1,51 @@
+name: Cache Demo Workflow
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  cache-demo:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Prime cache with key cache-8cbe73b
+      id: cache-primer
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.npm
+          node_modules
+        key: cache-${{ runner.os }}-8cbe73b-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          cache-${{ runner.os }}-8cbe73b-
+          
+    - name: prime-cache-8cbe73b
+      run: |
+        if [ "${{ steps.cache-primer.outputs.cache-hit }}" == 'true' ]; then
+          echo "Cache hit! 🎉"
+          echo "Restored dependencies from cache"
+        else
+          echo "Cache miss! 🔄"
+          echo "Will prime the cache for next run"
+          # Simulate installing dependencies
+          mkdir -p ~/.npm
+          echo "simulated dependencies" > ~/.npm/cache-content
+        fi
+        
+    - name: Install dependencies (simulated)
+      if: steps.cache-primer.outputs.cache-hit != 'true'
+      run: |
+        echo "Installing dependencies..."
+        # Simulate a time-consuming installation
+        sleep 10
+        echo "Dependencies installed!"
+        
+    - name: Run tests
+      run: |
+        echo "Running tests with cached dependencies..."
+        echo "Tests completed successfully!"
